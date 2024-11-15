@@ -11,12 +11,21 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 
-#include "EnhancedInputComponent.h"
-#include "EnhancedInputSubsystems.h"
 #include "InputAction.h"
-#include "InputMappingContext.h"
+#include "InputActionValue.h"
 
 #include "MyPlayerPawn.generated.h"
+
+class UInputMappingContext;
+
+UENUM(BlueprintType)
+enum class EDirection : uint8
+{
+	Right UMETA(DisplayName = "Right"),
+	Left  UMETA(DisplayName = "Left"),
+	Up    UMETA(DisplayName = "Up"),
+	Down  UMETA(DisplayName = "Down")
+};
 
 UCLASS()
 class PROJECT_CLEAN_API AMyPlayerPawn : public APawn
@@ -30,35 +39,58 @@ public:
 	/* Components */
 
 	// Static Mesh 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
 	UStaticMeshComponent* StaticMeshComponent;
 
 	// Box Collider
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
 	UBoxComponent* BoxCollider;
 
 	// Camera
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
 	UCameraComponent* Camera;
 
 	// SpringArm
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
 	USpringArmComponent* SpringArm;
-
-
-	/* Input Actions */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	UInputAction* MoveAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	UInputAction* LookAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Input")
-	UInputMappingContext* InputMappingContext;
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+
+	/* Input Actions */
+
+	// Mapping Context 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputMappingContext* PlayerMappingContext;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* LeftMove;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* RightMove;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* UpMove;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* DownMove;
+
+	/* Functions */
+
+	// SetUp InputMappingContext
+	void SetupInputMappingContext();
+
+	// Movement
+	void MoveLeft(const FInputActionValue& Value);
+	void MoveRight(const FInputActionValue& Value);
+	void MoveUp(const FInputActionValue& Value);
+	void MoveDown(const FInputActionValue& Value);
+
+	/* Variables */
+	// Movement
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Variables")
+	float MoveSpeed;
 
 public:	
 	// Called every frame
@@ -67,4 +99,6 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+private:
+	EDirection CurrentDirection;
 };
