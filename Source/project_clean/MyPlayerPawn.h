@@ -24,7 +24,8 @@ enum class EDirection : uint8
 	Right UMETA(DisplayName = "Right"),
 	Left  UMETA(DisplayName = "Left"),
 	Up    UMETA(DisplayName = "Up"),
-	Down  UMETA(DisplayName = "Down")
+	Down  UMETA(DisplayName = "Down"),
+	Still UMETA(DisplayName = "Still")
 };
 
 UCLASS()
@@ -82,15 +83,28 @@ protected:
 	void SetupInputMappingContext();
 
 	// Movement
-	void MoveLeft(const FInputActionValue& Value);
-	void MoveRight(const FInputActionValue& Value);
-	void MoveUp(const FInputActionValue& Value);
-	void MoveDown(const FInputActionValue& Value);
+	void MoveLeftInput(const FInputActionValue& Value);
+	void MoveRightInput(const FInputActionValue& Value);
+	void MoveUpInput(const FInputActionValue& Value);
+	void MoveDownInput(const FInputActionValue& Value);
+
+	void MovePlayer();
+
+	UFUNCTION(BlueprintCallable, Category = "Points")
+	void AddPoints(int32 Ammount);
+
+	int32 GetPoints();
 
 	/* Variables */
 	// Movement
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Variables")
 	float MoveSpeed;
+
+	FVector MovementDirection;
+
+	// Score
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Variables")
+	int32 PlayerScore;
 
 public:	
 	// Called every frame

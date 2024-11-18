@@ -26,8 +26,9 @@ AMyPlayerPawn::AMyPlayerPawn()
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
 
 
-
 	MoveSpeed = 3.0f;
+	CurrentDirection = EDirection::Still;
+	PlayerScore = 0;
 }
 
 // Called when the game starts or when spawned
@@ -43,7 +44,7 @@ void AMyPlayerPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	
+	MovePlayer();
 }
 
 // Called to bind functionality to input
@@ -54,10 +55,10 @@ void AMyPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		// Movement 
-		EnhancedInputComponent->BindAction(RightMove, ETriggerEvent::Triggered, this, &AMyPlayerPawn::MoveRight);
-		EnhancedInputComponent->BindAction(LeftMove, ETriggerEvent::Triggered, this, &AMyPlayerPawn::MoveLeft);
-		EnhancedInputComponent->BindAction(UpMove, ETriggerEvent::Triggered, this, &AMyPlayerPawn::MoveUp);
-		EnhancedInputComponent->BindAction(DownMove, ETriggerEvent::Triggered, this, &AMyPlayerPawn::MoveDown);
+		EnhancedInputComponent->BindAction(RightMove, ETriggerEvent::Triggered, this, &AMyPlayerPawn::MoveRightInput);
+		EnhancedInputComponent->BindAction(LeftMove, ETriggerEvent::Triggered, this, &AMyPlayerPawn::MoveLeftInput);
+		EnhancedInputComponent->BindAction(UpMove, ETriggerEvent::Triggered, this, &AMyPlayerPawn::MoveUpInput);
+		EnhancedInputComponent->BindAction(DownMove, ETriggerEvent::Triggered, this, &AMyPlayerPawn::MoveDownInput);
 	}
 }
 
@@ -73,68 +74,85 @@ void AMyPlayerPawn::SetupInputMappingContext()
 	}
 }
 
-void AMyPlayerPawn::MoveLeft(const FInputActionValue& Value)
+void AMyPlayerPawn::MoveLeftInput(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
 
 	if (CurrentValue)
 	{
-		FVector MovementDirection;
-
-		FVector Reverse = GetActorRightVector() * -1.0;
-
-		MovementDirection.Y = GetActorLocation().Y + (Reverse.Y * MoveSpeed);
-		MovementDirection.X = GetActorLocation().X;
-		MovementDirection.Z = GetActorLocation().Z;
-
-		SetActorLocation(MovementDirection, false, nullptr, ETeleportType::None);
+		CurrentDirection = EDirection::Left;
 	}
 }
 
-void AMyPlayerPawn::MoveRight(const FInputActionValue& Value)
+void AMyPlayerPawn::MoveRightInput(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
 
 	if (CurrentValue)
 	{
-		FVector MovementDirection;
-		MovementDirection.Y = GetActorLocation().Y + (GetActorRightVector().Y * MoveSpeed);
-		MovementDirection.X = GetActorLocation().X;
-		MovementDirection.Z = GetActorLocation().Z;
-		
-		SetActorLocation(MovementDirection, false, nullptr, ETeleportType::None);
+		CurrentDirection = EDirection::Right;
 	}
 }
 
-void AMyPlayerPawn::MoveUp(const FInputActionValue& Value)
+void AMyPlayerPawn::MoveUpInput(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
 
 	if (CurrentValue)
 	{
-		FVector MovementDirection;
-		MovementDirection.X = GetActorLocation().X + (GetActorForwardVector().X * MoveSpeed);
-		MovementDirection.Y = GetActorLocation().Y;
-		MovementDirection.Z = GetActorLocation().Z;
-
-		SetActorLocation(MovementDirection, false, nullptr, ETeleportType::None);
+		CurrentDirection = EDirection::Up;
 	}
 }
 
-void AMyPlayerPawn::MoveDown(const FInputActionValue& Value)
+void AMyPlayerPawn::MoveDownInput(const FInputActionValue& Value)
 {
 	const bool CurrentValue = Value.Get<bool>();
 
 	if (CurrentValue)
 	{
-		FVector MovementDirection;
-
-		FVector Reverse = GetActorForwardVector() * -1.0;
-
-		MovementDirection.X = GetActorLocation().X + (Reverse.X * MoveSpeed);
-		MovementDirection.Y = GetActorLocation().Y;
-		MovementDirection.Z = GetActorLocation().Z;
-
-		SetActorLocation(MovementDirection, false, nullptr, ETeleportType::None);
+		CurrentDirection = EDirection::Down;
 	}
+}
+
+void AMyPlayerPawn::MovePlayer()
+{
+	this->MovementDirection = GetActorLocation(); // Initialize MovementDirection with current location
+	FVector Reverse = FVector::ZeroVector;        // Initialize Reverse vector
+
+	switch (CurrentDirection)
+	{
+	case EDirection::Right:
+		this->MovementDirection.Y = GetActorLocation().Y + (GetActorRightVector().Y * MoveSpeed);
+		break;
+
+	case EDirection::Left:
+		Reverse = GetActorRightVector() * -1.0;
+		this->MovementDirection.Y = GetActorLocation().Y + (Reverse.Y * MoveSpeed);
+		break;
+
+	case EDirection::Up:
+		this->MovementDirection.X = GetActorLocation().X + (GetActorForwardVector().X * MoveSpeed);
+		break;
+
+	case EDirection::Down:
+		Reverse = GetActorForwardVector() * -1.0;
+		this->MovementDirection.X = GetActorLocation().X + (Reverse.X * MoveSpeed);
+		break;
+
+	default:
+		break;
+	}
+
+	// Call SetActorLocation outside the switch to ensure it executes for all cases
+	SetActorLocation(this->MovementDirection, false, nullptr, ETeleportType::None);
+}
+
+void AMyPlayerPawn::AddPoints(int32 Ammount)
+{
+	PlayerScore += Ammount; 
+}
+
+int32 AMyPlayerPawn::GetPoints()
+{
+	return PlayerScore;
 }
