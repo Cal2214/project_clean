@@ -3,6 +3,8 @@
 
 #include "MyPlayerPawn.h"
 
+#include "MyPowerup.h"
+
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 
@@ -29,6 +31,13 @@ AMyPlayerPawn::AMyPlayerPawn()
 	MoveSpeed = 3.0f;
 	CurrentDirection = EDirection::Still;
 	PlayerScore = 0;
+
+	hasPowerup1 = false;
+	hasPowerup2 = false;
+	hasSpeedLeft = false;
+	hasSpeedRight = false;
+	hasSizeLeft = false;
+	hasSizeRight = false;
 }
 
 // Called when the game starts or when spawned
@@ -59,6 +68,8 @@ void AMyPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 		EnhancedInputComponent->BindAction(LeftMove, ETriggerEvent::Triggered, this, &AMyPlayerPawn::MoveLeftInput);
 		EnhancedInputComponent->BindAction(UpMove, ETriggerEvent::Triggered, this, &AMyPlayerPawn::MoveUpInput);
 		EnhancedInputComponent->BindAction(DownMove, ETriggerEvent::Triggered, this, &AMyPlayerPawn::MoveDownInput);
+		EnhancedInputComponent->BindAction(LeftPowerup, ETriggerEvent::Triggered, this, &AMyPlayerPawn::ActivateLeftPowerup);
+		EnhancedInputComponent->BindAction(RightPowerup, ETriggerEvent::Triggered, this, &AMyPlayerPawn::ActivateRightPowerup);
 	}
 }
 
@@ -155,4 +166,169 @@ void AMyPlayerPawn::AddPoints(int32 Ammount)
 int32 AMyPlayerPawn::GetPoints()
 {
 	return PlayerScore;
+}
+
+void AMyPlayerPawn::GetPowerUp(AMyPowerup* Powerup)
+{
+	if (Powerup == nullptr)
+	{
+		return;
+	}
+
+	if (!hasPowerup1) // First try Slot 1
+	{
+		AssignPowerup(Powerup, true);
+		hasPowerup1 = true;
+	}
+	else if (!hasPowerup2) // Then Slot 2
+	{
+		AssignPowerup(Powerup, false);
+		hasPowerup2 = true;
+	}
+
+	if (hasPowerup1 && hasPowerup2) {
+		hasMaxPowerup = true;
+	}
+}
+
+
+void AMyPlayerPawn::AssignPowerup(AMyPowerup* Powerup, bool bIsLeft)
+{
+	EPowerupType PowerupType = Powerup->GetPowerup(); 
+
+	if (bIsLeft)
+	{
+
+		// Reset left slot state first
+		hasSpeedLeft = false;
+		hasSizeLeft = false;
+
+		if (PowerupType == EPowerupType::Speed)
+		{
+			hasSpeedLeft = true;
+		}
+		else if (PowerupType == EPowerupType::Size)
+		{
+			hasSizeLeft = true;
+		}
+	}
+	else
+	{
+
+		// Reset right slot state first
+		hasSpeedRight = false;
+		hasSizeRight = false;
+
+		if (PowerupType == EPowerupType::Speed)
+		{
+			hasSpeedRight = true;
+		}
+		else if (PowerupType == EPowerupType::Size)
+		{
+			hasSizeRight = true;
+		}
+	}
+}
+
+void AMyPlayerPawn::ActivateLeftPowerup(const FInputActionValue& Value) 
+{
+	const bool CurrentValue = Value.Get<bool>();
+
+	if (CurrentValue)
+	{
+		if (hasPowerup1) {
+			usePowerup1 = true;
+			UsePowerup();
+		}
+		else {
+			usePowerup1 = false;
+		}
+	}
+}
+
+void AMyPlayerPawn::ActivateRightPowerup(const FInputActionValue& Value)
+{
+	const bool CurrentValue = Value.Get<bool>();
+
+	if (CurrentValue)
+	{
+		if (hasPowerup2) {
+			usePowerup2 = true;
+			UsePowerup();
+		}
+		else {
+			usePowerup2 = false;
+		}
+	}
+}
+
+void AMyPlayerPawn::UsePowerup()
+{
+	if (usePowerup1) {
+		if (hasSpeedLeft) {
+			ActivateSpeedPowerup();
+			RemoveLeftPowerup();
+		}
+		else if (hasSizeLeft) {
+			ActivateSizePowerup();
+			RemoveLeftPowerup();
+		}
+	}
+	
+	if (usePowerup2) {
+		if (hasSpeedRight) {
+			ActivateSpeedPowerup();
+			RemoveRightPowerup();
+		}
+		else if (hasSizeRight) {
+			ActivateSizePowerup();
+			RemoveRightPowerup();
+		}
+	}
+}
+
+void AMyPlayerPawn::ActivateSpeedPowerup()
+{
+	MoveSpeed = 10.0f;
+	DelayTime = 5.0f;
+
+	GetWorld()->GetTimerManager().SetTimer(MyTimerHandler, this, &AMyPlayerPawn::DeactivateSpeedPowerup, DelayTime, false);
+}
+
+void AMyPlayerPawn::ActivateSizePowerup()
+{
+	FVector Scale = FVector(0.7, 0.7, 0.3);
+	StaticMeshComponent->SetWorldScale3D(Scale);
+	DelayTime = 5.0f;
+
+	GetWorld()->GetTimerManager().SetTimer(MyTimerHandler, this, &AMyPlayerPawn::DeactivateSizePowerup, DelayTime, false);
+}
+
+void AMyPlayerPawn::DeactivateSpeedPowerup()
+{
+	MoveSpeed = 3.0f;
+}
+
+void AMyPlayerPawn::DeactivateSizePowerup()
+{
+	FVector Scale = FVector(0.3, 0.3, 0.3);
+	StaticMeshComponent->SetWorldScale3D(Scale);
+}
+
+void AMyPlayerPawn::RemoveLeftPowerup()
+{
+	hasPowerup1 = false;
+	usePowerup1 = false;
+	hasMaxPowerup = false;
+	hasSpeedLeft = false;
+	hasSizeLeft = false;
+}
+
+void AMyPlayerPawn::RemoveRightPowerup()
+{
+	hasPowerup2 = false;
+	usePowerup2 = false;
+	hasMaxPowerup = false;
+	hasSpeedRight = false;
+	hasSizeRight = false;
 }

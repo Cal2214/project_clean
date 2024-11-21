@@ -40,7 +40,7 @@ public:
 	/* Functions */
 	// Get Powerup Type
 	UFUNCTION(BlueprintCallable, Category = "Powerup")
-	void GetPowerup();
+	EPowerupType GetPowerup();
 
 
 protected:

@@ -17,6 +17,7 @@
 #include "MyPlayerPawn.generated.h"
 
 class UInputMappingContext;
+class AMyPowerup;
 
 UENUM(BlueprintType)
 enum class EDirection : uint8
@@ -77,6 +78,12 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
 	UInputAction* DownMove;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* LeftPowerup;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* RightPowerup;
+
 	/* Functions */
 
 	// SetUp InputMappingContext
@@ -87,6 +94,8 @@ protected:
 	void MoveRightInput(const FInputActionValue& Value);
 	void MoveUpInput(const FInputActionValue& Value);
 	void MoveDownInput(const FInputActionValue& Value);
+	void ActivateLeftPowerup(const FInputActionValue& Value);
+	void ActivateRightPowerup(const FInputActionValue& Value);
 
 	void MovePlayer();
 
@@ -94,6 +103,22 @@ protected:
 	void AddPoints(int32 Ammount);
 
 	int32 GetPoints();
+
+	// Powerups 
+	UFUNCTION(BlueprintCallable, Category = "Powerup")
+	void GetPowerUp(AMyPowerup* Powerup);
+
+	void AssignPowerup(AMyPowerup* Powerup, bool bIsLeft);
+	void UsePowerup();
+
+	void ActivateSpeedPowerup();
+	void ActivateSizePowerup();
+
+	void DeactivateSpeedPowerup();
+	void DeactivateSizePowerup();
+
+	void RemoveLeftPowerup();
+	void RemoveRightPowerup();
 
 	/* Variables */
 	// Movement
@@ -105,6 +130,32 @@ protected:
 	// Score
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Variables")
 	int32 PlayerScore;
+
+	// Powerup 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Variables")
+	bool hasPowerup1;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Variables")
+	bool hasPowerup2;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Variables")
+	bool hasMaxPowerup;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Variables")
+	bool usePowerup1;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Variables")
+	bool usePowerup2;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Variables")
+	bool hasSpeedLeft;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Variables")
+	bool hasSpeedRight;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Variables")
+	bool hasSizeLeft;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Variables")
+	bool hasSizeRight;
+
+	float DelayTime;
+	FTimerHandle MyTimerHandler;
 
 public:	
 	// Called every frame

@@ -14,6 +14,8 @@ AMyDirt::AMyDirt()
 
 	BoxCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxColliderComponent"));
 	BoxCollider->SetupAttachment(RootComponent);
+
+	Points = 10;
 }
 
 // Called when the game starts or when spawned
@@ -32,7 +34,6 @@ void AMyDirt::Tick(float DeltaTime)
 
 void AMyDirt::CollectDirt()
 {
-	Points = 10.0f;
 	Destroy();
 }
 

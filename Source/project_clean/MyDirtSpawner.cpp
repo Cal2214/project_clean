@@ -37,8 +37,11 @@ void AMyDirtSpawner::DelayDirt()
 
 void AMyDirtSpawner::SpawnDirt()
 {
+	FActorSpawnParameters spawnParams;
+	spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
+
 	if(DirtClass)
-	GetWorld()->SpawnActor<AMyDirt>(DirtClass, GetActorLocation(), FRotator::ZeroRotator);
+	GetWorld()->SpawnActor<AMyDirt>(DirtClass, GetActorLocation(), FRotator::ZeroRotator, spawnParams);
 
 	DelayDirt();
 }

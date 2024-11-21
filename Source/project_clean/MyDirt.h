@@ -33,7 +33,7 @@ public:
 	/* Variables */
 	// Points
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Variables")
-	float Points;
+	int32 Points;
 
 	/* Functions */
 	UFUNCTION(BlueprintCallable, Category = "Dirt")

@@ -32,23 +32,22 @@ void AMyPowerup::Tick(float DeltaTime)
 
 }
 
-void AMyPowerup::GetPowerup()
+EPowerupType AMyPowerup::GetPowerup()
 {
 	int RandomValue = rand() % 2;
-	UE_LOG(LogTemp, Warning, TEXT("RandomValue: %d"), RandomValue);
 
 	switch (RandomValue)
 	{
 	case 0:
 		CurrentPowerup = EPowerupType::Speed;
-		UE_LOG(LogTemp, Warning, TEXT("Speed"));
 		break;
 	case 1:
 		CurrentPowerup = EPowerupType::Size;
-		UE_LOG(LogTemp, Warning, TEXT("Size"));
 		break;
 	default:
 		break;
 	}
+	UE_LOG(LogTemp, Log, TEXT("Your message: %d"), CurrentPowerup);
+	return CurrentPowerup;
 }
 
