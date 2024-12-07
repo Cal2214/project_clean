@@ -232,38 +232,41 @@ void AMyPlayerPawn::AssignPowerup(AMyPowerup* Powerup, bool bIsLeft)
 
 void AMyPlayerPawn::ActivateLeftPowerup(const FInputActionValue& Value) 
 {
+	// Check if the input button for the left power-up is pressed
 	const bool CurrentValue = Value.Get<bool>();
 
 	if (CurrentValue)
 	{
 		if (hasPowerup1) {
-			usePowerup1 = true;
+			usePowerup1 = true; // Flag the left power-up for use
 			UsePowerup();
 		}
 		else {
-			usePowerup1 = false;
+			usePowerup1 = false; // No power-up available in Slot 1
 		}
 	}
 }
 
 void AMyPlayerPawn::ActivateRightPowerup(const FInputActionValue& Value)
 {
+	// Check if the input button for the right power-up is pressed
 	const bool CurrentValue = Value.Get<bool>();
 
 	if (CurrentValue)
 	{
 		if (hasPowerup2) {
-			usePowerup2 = true;
+			usePowerup2 = true; // Flag the right power-up for use
 			UsePowerup();
 		}
 		else {
-			usePowerup2 = false;
+			usePowerup2 = false; // No power-up available in Slot 2
 		}
 	}
 }
 
 void AMyPlayerPawn::UsePowerup()
 {
+	// Handle left power-up activation
 	if (usePowerup1) {
 		if (hasSpeedLeft) {
 			ActivateSpeedPowerup();
@@ -275,6 +278,7 @@ void AMyPlayerPawn::UsePowerup()
 		}
 	}
 	
+	// Handle right power-up activation
 	if (usePowerup2) {
 		if (hasSpeedRight) {
 			ActivateSpeedPowerup();
@@ -289,34 +293,41 @@ void AMyPlayerPawn::UsePowerup()
 
 void AMyPlayerPawn::ActivateSpeedPowerup()
 {
+	// Temporarily increase player movement speed
 	MoveSpeed = 10.0f;
 	DelayTime = 5.0f;
 
+	// Set a timer to deactivate the speed boost after DelayTime seconds
 	GetWorld()->GetTimerManager().SetTimer(MyTimerHandler, this, &AMyPlayerPawn::DeactivateSpeedPowerup, DelayTime, false);
 }
 
 void AMyPlayerPawn::ActivateSizePowerup()
 {
+	// Temporarily increase player size
 	FVector Scale = FVector(0.7, 0.7, 0.3);
 	StaticMeshComponent->SetWorldScale3D(Scale);
 	DelayTime = 5.0f;
 
+	// Set a timer to deactivate the size boost after DelayTime seconds
 	GetWorld()->GetTimerManager().SetTimer(MyTimerHandler, this, &AMyPlayerPawn::DeactivateSizePowerup, DelayTime, false);
 }
 
 void AMyPlayerPawn::DeactivateSpeedPowerup()
 {
+	// Reset player movement speed to default value
 	MoveSpeed = 3.0f;
 }
 
 void AMyPlayerPawn::DeactivateSizePowerup()
 {
+	// Reset player size to default scale
 	FVector Scale = FVector(0.3, 0.3, 0.3);
 	StaticMeshComponent->SetWorldScale3D(Scale);
 }
 
 void AMyPlayerPawn::RemoveLeftPowerup()
 {
+	// Clear all state related to the left power-up slot
 	hasPowerup1 = false;
 	usePowerup1 = false;
 	hasMaxPowerup = false;
@@ -326,6 +337,7 @@ void AMyPlayerPawn::RemoveLeftPowerup()
 
 void AMyPlayerPawn::RemoveRightPowerup()
 {
+	// Clear all state related to the right power-up slot
 	hasPowerup2 = false;
 	usePowerup2 = false;
 	hasMaxPowerup = false;

@@ -32,30 +32,37 @@ void AMyPowerupSpawner::Tick(float DeltaTime)
 
 void AMyPowerupSpawner::DelayPowerup()
 {
+	// Generate a random number to decide the time to spawn next powerup 
 	SpawnTime = FMath::FRandRange(5.0, 20.0);
 
+	// Sets the timer to call the spawn function 
 	GetWorld()->GetTimerManager().SetTimer(MyTimerHandler, this, &AMyPowerupSpawner::SpawnPowerup, SpawnTime, false);
 }
 
 void AMyPowerupSpawner::SpawnPowerup()
 {
-	FVector SpawnOrigin = GetActorLocation();
-	float SpawnRadius = 7000.0f;
-	FVector RandomPoint = SpawnOrigin;
+	FVector SpawnOrigin = GetActorLocation(); // Get the spawner's origin point to use as the center for randomization
+	float SpawnRadius = 7000.0f;		      // Define the radius within which power-ups can spawn
+	FVector RandomPoint = SpawnOrigin;		  // Default spawn point is the spawner's origin
 
+	// Use Unreal's Navigation System to find a random, reachable point within the radius
 	UNavigationSystemV1* NavSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(GetWorld());
+
 	if (NavSystem) {
 		FNavLocation NavLocation;
+		// Get a random, valid point within the defined radius
 		if (NavSystem->GetRandomReachablePointInRadius(SpawnOrigin, SpawnRadius, NavLocation)) {
 			RandomPoint = NavLocation.Location;
 		}
 	}
-
+	// Set the Z-axis to ensure the power-up spawns high enough to fall to the ground
 	RandomPoint.Z = 2000.0f;
 
+	// Spawn the power-up actor at the calculated location, if the PowerupClass is valid
 	if (PowerupClass)
 		GetWorld()->SpawnActor<AMyPowerup>(PowerupClass, RandomPoint, FRotator::ZeroRotator);
 
+	// Call DelayPowerup to reset the timer for the next spawn
 	DelayPowerup();
 }
 
