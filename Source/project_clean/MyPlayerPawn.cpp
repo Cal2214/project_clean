@@ -4,7 +4,7 @@
 #include "MyPlayerPawn.h"
 
 #include "MyPowerup.h"
-
+#include "Net/UnrealNetwork.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 
@@ -38,6 +38,8 @@ AMyPlayerPawn::AMyPlayerPawn()
 	hasSpeedRight = false;
 	hasSizeLeft = false;
 	hasSizeRight = false;
+
+	bReplicates = true;
 }
 
 // Called when the game starts or when spawned
@@ -85,41 +87,47 @@ void AMyPlayerPawn::SetupInputMappingContext()
 	}
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Move Left
 void AMyPlayerPawn::MoveLeftInput(const FInputActionValue& Value)
 {
-	const bool CurrentValue = Value.Get<bool>();
-
-	if (CurrentValue)
+	if (Value.Get<bool>())
 	{
 		CurrentDirection = EDirection::Left;
 	}
 }
 
+
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// Move Right
 void AMyPlayerPawn::MoveRightInput(const FInputActionValue& Value)
 {
-	const bool CurrentValue = Value.Get<bool>();
-
-	if (CurrentValue)
+	if (Value.Get<bool>())
 	{
 		CurrentDirection = EDirection::Right;
 	}
 }
 
+// Move Up
 void AMyPlayerPawn::MoveUpInput(const FInputActionValue& Value)
 {
-	const bool CurrentValue = Value.Get<bool>();
-
-	if (CurrentValue)
+	if (Value.Get<bool>())
 	{
 		CurrentDirection = EDirection::Up;
 	}
 }
 
+// Move Down
 void AMyPlayerPawn::MoveDownInput(const FInputActionValue& Value)
 {
-	const bool CurrentValue = Value.Get<bool>();
-
-	if (CurrentValue)
+	if (Value.Get<bool>())
 	{
 		CurrentDirection = EDirection::Down;
 	}
@@ -127,35 +135,54 @@ void AMyPlayerPawn::MoveDownInput(const FInputActionValue& Value)
 
 void AMyPlayerPawn::MovePlayer()
 {
-	this->MovementDirection = GetActorLocation(); // Initialize MovementDirection with current location
-	FVector Reverse = FVector::ZeroVector;        // Initialize Reverse vector
-
-	switch (CurrentDirection)
+	if (HasAuthority())
 	{
-	case EDirection::Right:
-		this->MovementDirection.Y = GetActorLocation().Y + (GetActorRightVector().Y * MoveSpeed);
-		break;
-
-	case EDirection::Left:
-		Reverse = GetActorRightVector() * -1.0;
-		this->MovementDirection.Y = GetActorLocation().Y + (Reverse.Y * MoveSpeed);
-		break;
-
-	case EDirection::Up:
-		this->MovementDirection.X = GetActorLocation().X + (GetActorForwardVector().X * MoveSpeed);
-		break;
-
-	case EDirection::Down:
-		Reverse = GetActorForwardVector() * -1.0;
-		this->MovementDirection.X = GetActorLocation().X + (Reverse.X * MoveSpeed);
-		break;
-
-	default:
-		break;
+		UE_LOG(LogTemp, Warning, TEXT("Server is handling movement."));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Client is calling server move."));
 	}
 
-	// Call SetActorLocation outside the switch to ensure it executes for all cases
-	SetActorLocation(this->MovementDirection, false, nullptr, ETeleportType::None);
+		FVector NewLocation = GetActorLocation();
+		FVector Reverse = FVector::ZeroVector;
+
+		switch (CurrentDirection)
+		{
+		case EDirection::Right:
+			NewLocation.Y += MoveSpeed;
+			break;
+		case EDirection::Left:
+			Reverse = GetActorRightVector() * -1.0;
+			NewLocation.Y += Reverse.Y * MoveSpeed;
+			break;
+		case EDirection::Up:
+			NewLocation.X += MoveSpeed;
+			break;
+		case EDirection::Down:
+			Reverse = GetActorForwardVector() * -1.0;
+			NewLocation.X += Reverse.X * MoveSpeed;
+			break;
+		default:
+			break;
+		}
+
+		SetActorLocation(NewLocation, false, nullptr, ETeleportType::None);
+
+		if (!HasAuthority())
+		{
+			Server_MovePlayer(NewLocation);
+		}
+}
+
+bool AMyPlayerPawn::Server_MovePlayer_Validate(FVector NewLocation)
+{
+	return true;
+}
+
+void AMyPlayerPawn::Server_MovePlayer_Implementation(FVector NewLocation)
+{
+	SetActorLocation(NewLocation, false, nullptr, ETeleportType::None);
 }
 
 void AMyPlayerPawn::AddPoints(int32 Ammount)
@@ -343,4 +370,13 @@ void AMyPlayerPawn::RemoveRightPowerup()
 	hasMaxPowerup = false;
 	hasSpeedRight = false;
 	hasSizeRight = false;
+}
+
+void AMyPlayerPawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	// Replicate the movement direction
+	DOREPLIFETIME(AMyPlayerPawn, CurrentDirection);
+	DOREPLIFETIME(AMyPlayerPawn, MoveSpeed);
 }

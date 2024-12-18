@@ -94,10 +94,17 @@ protected:
 	void MoveRightInput(const FInputActionValue& Value);
 	void MoveUpInput(const FInputActionValue& Value);
 	void MoveDownInput(const FInputActionValue& Value);
+
+	// Powerups
 	void ActivateLeftPowerup(const FInputActionValue& Value);
 	void ActivateRightPowerup(const FInputActionValue& Value);
 
 	void MovePlayer();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_MovePlayer(FVector NewLocation);
+	bool Server_MovePlayer_Validate(FVector NewLocation);
+	void Server_MovePlayer_Implementation(FVector NewLocation);
 
 	UFUNCTION(BlueprintCallable, Category = "Points")
 	void AddPoints(int32 Ammount);
@@ -122,9 +129,10 @@ protected:
 
 	/* Variables */
 	// Movement
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Variables")
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	float MoveSpeed;
 
+	UPROPERTY(Replicated)
 	FVector MovementDirection;
 
 	// Score
@@ -164,6 +172,7 @@ public:
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-private:
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	EDirection CurrentDirection;
+private:
 };
