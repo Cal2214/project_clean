@@ -27,6 +27,15 @@ protected:
 	void DelayDirt();
 	void SpawnDirt();
 
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_DelayDirt();
+	bool Server_DelayDirt_Validate();
+	void Server_DelayDirt_Implementation();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multi_SpawnDirt();
+	void Multi_SpawnDirt_Implementation();
+
 	/* Variables */
 	float SpawnTime;
 	FTimerHandle MyTimerHandler;
