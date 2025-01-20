@@ -2,7 +2,7 @@
 
 
 #include "MyPowerupSpawner.h"
-
+#include "Net/UnrealNetwork.h"
 #include "MyPowerup.h"
 #include "NavigationSystem.h"
 
@@ -13,6 +13,7 @@ AMyPowerupSpawner::AMyPowerupSpawner()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	bReplicates = true;
 }
 
 // Called when the game starts or when spawned
@@ -20,7 +21,12 @@ void AMyPowerupSpawner::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	DelayPowerup();
+	//DelayPowerup();
+	
+	if (HasAuthority())
+	{
+		DelayPowerup();
+	}
 }
 
 // Called every frame
@@ -59,10 +65,38 @@ void AMyPowerupSpawner::SpawnPowerup()
 	RandomPoint.Z = 2000.0f;
 
 	// Spawn the power-up actor at the calculated location, if the PowerupClass is valid
-	if (PowerupClass)
-		GetWorld()->SpawnActor<AMyPowerup>(PowerupClass, RandomPoint, FRotator::ZeroRotator);
+	//if (PowerupClass)
+	//	GetWorld()->SpawnActor<AMyPowerup>(PowerupClass, RandomPoint, FRotator::ZeroRotator);
+	Multi_SpawnPowerup_Implementation(RandomPoint);
 
 	// Call DelayPowerup to reset the timer for the next spawn
 	DelayPowerup();
+}
+
+void AMyPowerupSpawner::Server_DelayPowerup_Implementation()
+{
+	DelayPowerup();
+}
+
+bool AMyPowerupSpawner::Server_DelayPowerup_Validate()
+{
+	return true;
+}
+
+void AMyPowerupSpawner::Multi_SpawnPowerup_Implementation(FVector RandomPoint)
+{
+	// Spawn the power-up actor at the calculated location, if the PowerupClass is valid
+	if (PowerupClass)
+	{
+		// Spawn the dirt actor
+		AMyPowerup* Powerup = GetWorld()->SpawnActor<AMyPowerup>(PowerupClass, RandomPoint, FRotator::ZeroRotator);
+
+		// Set the spawned actor to replicate
+		if (Powerup)
+		{
+			Powerup->SetReplicates(true);
+			Powerup->SetReplicateMovement(true);
+		}
+	}
 }
 

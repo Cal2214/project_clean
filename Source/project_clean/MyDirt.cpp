@@ -34,6 +34,7 @@ void AMyDirt::Tick(float DeltaTime)
 
 void AMyDirt::CollectDirt()
 {
+	BoxCollider->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	Destroy();
 }
 

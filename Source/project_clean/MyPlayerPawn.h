@@ -115,14 +115,50 @@ protected:
 	UFUNCTION(BlueprintCallable, Category = "Powerup")
 	void GetPowerUp(AMyPowerup* Powerup);
 
+
 	void AssignPowerup(AMyPowerup* Powerup, bool bIsLeft);
+
 	void UsePowerup();
 
 	void ActivateSpeedPowerup();
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_ActivateSpeedPowerup(UMaterial* material);
+	bool Server_ActivateSpeedPowerup_Validate(UMaterial* material);
+	void Server_ActivateSpeedPowerup_Implementation(UMaterial* material);
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+	void Multi_ActivateSpeedPowerup(UMaterial* material);
+	bool Multi_ActivateSpeedPowerup_Validate(UMaterial* material);
+	void Multi_ActivateSpeedPowerup_Implementation(UMaterial* material);
+
 	void ActivateSizePowerup();
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_ActivateSizePowerup(UMaterial* material, FVector scale);
+	bool Server_ActivateSizePowerup_Validate(UMaterial* material, FVector scale);
+	void Server_ActivateSizePowerup_Implementation(UMaterial* material, FVector scale);
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+	void Multi_ActivateSizePowerup(UMaterial* material, FVector scale);
+	bool Multi_ActivateSizePowerup_Validate(UMaterial* material, FVector scale);
+	void Multi_ActivateSizePowerup_Implementation(UMaterial* material, FVector scale);
 
 	void DeactivateSpeedPowerup();
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_DeactivateSpeedPowerup(UMaterial* material);
+	bool Server_DeactivateSpeedPowerup_Validate(UMaterial* material);
+	void Server_DeactivateSpeedPowerup_Implementation(UMaterial* material);
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+	void Multi_DeactivateSpeedPowerup(UMaterial* material);
+	bool Multi_DeactivateSpeedPowerup_Validate(UMaterial* material);
+	void Multi_DeactivateSpeedPowerup_Implementation(UMaterial* material);
+
 	void DeactivateSizePowerup();
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_DeactivateSizePowerup(UMaterial* material, FVector scale);
+	bool Server_DeactivateSizePowerup_Validate(UMaterial* material, FVector scale);
+	void Server_DeactivateSizePowerup_Implementation(UMaterial* material, FVector scale);
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+	void Multi_DeactivateSizePowerup(UMaterial* material, FVector scale);
+	bool Multi_DeactivateSizePowerup_Validate(UMaterial* material, FVector scale);
+	void Multi_DeactivateSizePowerup_Implementation(UMaterial* material, FVector scale);
 
 	void RemoveLeftPowerup();
 	void RemoveRightPowerup();
@@ -136,34 +172,41 @@ protected:
 	FVector MovementDirection;
 
 	// Score
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Variables")
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	int32 PlayerScore;
 
 	// Powerup 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Variables")
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Powerups")
 	bool hasPowerup1;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Variables")
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Powerups")
 	bool hasPowerup2;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Variables")
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Powerups")
 	bool hasMaxPowerup;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Variables")
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Powerups")
 	bool usePowerup1;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Variables")
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Powerups")
 	bool usePowerup2;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Variables")
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Powerups")
 	bool hasSpeedLeft;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Variables")
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Powerups")
 	bool hasSpeedRight;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Variables")
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Powerups")
 	bool hasSizeLeft;
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Variables")
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Powerups")
 	bool hasSizeRight;
 
 	float DelayTime;
 	FTimerHandle MyTimerHandler;
+
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Material")
+	UMaterial* OriginalMaterial;
+
+	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Material")
+	UMaterial* SpeedMaterial;
+
 
 public:	
 	// Called every frame

@@ -27,6 +27,15 @@ protected:
 	void DelayPowerup();
 	void SpawnPowerup();
 
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_DelayPowerup();
+	bool Server_DelayPowerup_Validate();
+	void Server_DelayPowerup_Implementation();
+
+	UFUNCTION(NetMulticast, Reliable)
+	void Multi_SpawnPowerup(FVector RandomPoint);
+	void Multi_SpawnPowerup_Implementation(FVector RandomPoint);
+
 	/* Variables */
 	float SpawnTime;
 	FTimerHandle MyTimerHandler;

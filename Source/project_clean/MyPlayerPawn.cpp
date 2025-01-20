@@ -15,6 +15,7 @@ AMyPlayerPawn::AMyPlayerPawn()
 	PrimaryActorTick.bCanEverTick = true;
 
 	StaticMeshComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("StaticMeshComponent"));
+	StaticMeshComponent->SetMaterial(0, OriginalMaterial);
 	RootComponent = StaticMeshComponent;
 
 	BoxCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxColliderComponent"));
@@ -32,14 +33,16 @@ AMyPlayerPawn::AMyPlayerPawn()
 	CurrentDirection = EDirection::Still;
 	PlayerScore = 0;
 
+	bReplicates = true; // Ensures the actor replicates
 	hasPowerup1 = false;
 	hasPowerup2 = false;
+	hasMaxPowerup = false;
+	usePowerup1 = false;
+	usePowerup2 = false;
 	hasSpeedLeft = false;
 	hasSpeedRight = false;
 	hasSizeLeft = false;
 	hasSizeRight = false;
-
-	bReplicates = true;
 }
 
 // Called when the game starts or when spawned
@@ -56,6 +59,16 @@ void AMyPlayerPawn::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	MovePlayer();
+
+	// Test
+	// Set max power-up flag if both slots are filled
+	if (hasPowerup1 && hasPowerup2)
+	{
+		hasMaxPowerup = true;
+	}
+	else {
+		hasMaxPowerup = false;
+	}
 }
 
 // Called to bind functionality to input
@@ -87,8 +100,6 @@ void AMyPlayerPawn::SetupInputMappingContext()
 	}
 }
 
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 // Move Left
 void AMyPlayerPawn::MoveLeftInput(const FInputActionValue& Value)
 {
@@ -98,14 +109,6 @@ void AMyPlayerPawn::MoveLeftInput(const FInputActionValue& Value)
 	}
 }
 
-
-
-
-
-
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Move Right
 void AMyPlayerPawn::MoveRightInput(const FInputActionValue& Value)
 {
@@ -137,11 +140,11 @@ void AMyPlayerPawn::MovePlayer()
 {
 	if (HasAuthority())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Server is handling movement."));
+		//UE_LOG(LogTemp, Warning, TEXT("Server is handling movement."));
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Client is calling server move."));
+		//UE_LOG(LogTemp, Warning, TEXT("Client is calling server move."));
 	}
 
 		FVector NewLocation = GetActorLocation();
@@ -197,27 +200,24 @@ int32 AMyPlayerPawn::GetPoints()
 
 void AMyPlayerPawn::GetPowerUp(AMyPowerup* Powerup)
 {
-	if (Powerup == nullptr)
-	{
+	if (Powerup == nullptr) return;
+
+	if (hasMaxPowerup) {
 		return;
 	}
 
-	if (!hasPowerup1) // First try Slot 1
-	{
-		AssignPowerup(Powerup, true);
-		hasPowerup1 = true;
-	}
-	else if (!hasPowerup2) // Then Slot 2
-	{
-		AssignPowerup(Powerup, false);
-		hasPowerup2 = true;
-	}
-
-	if (hasPowerup1 && hasPowerup2) {
-		hasMaxPowerup = true;
-	}
+		// Assign the power-up to the first empty slot
+		if (!hasPowerup1) // First try Slot 1
+		{
+			AssignPowerup(Powerup, true);
+			hasPowerup1 = true;
+		}
+		else if (!hasPowerup2) // Then Slot 2
+		{
+			AssignPowerup(Powerup, false);
+			hasPowerup2 = true;
+		}
 }
-
 
 void AMyPlayerPawn::AssignPowerup(AMyPowerup* Powerup, bool bIsLeft)
 {
@@ -259,34 +259,32 @@ void AMyPlayerPawn::AssignPowerup(AMyPowerup* Powerup, bool bIsLeft)
 
 void AMyPlayerPawn::ActivateLeftPowerup(const FInputActionValue& Value) 
 {
-	// Check if the input button for the left power-up is pressed
 	const bool CurrentValue = Value.Get<bool>();
 
 	if (CurrentValue)
 	{
 		if (hasPowerup1) {
-			usePowerup1 = true; // Flag the left power-up for use
-			UsePowerup();
+			usePowerup1 = true;
+				UsePowerup();
 		}
 		else {
-			usePowerup1 = false; // No power-up available in Slot 1
+			usePowerup1 = false;
 		}
 	}
 }
 
 void AMyPlayerPawn::ActivateRightPowerup(const FInputActionValue& Value)
 {
-	// Check if the input button for the right power-up is pressed
 	const bool CurrentValue = Value.Get<bool>();
 
 	if (CurrentValue)
 	{
 		if (hasPowerup2) {
-			usePowerup2 = true; // Flag the right power-up for use
-			UsePowerup();
+			usePowerup2 = true;
+				UsePowerup(); 
 		}
 		else {
-			usePowerup2 = false; // No power-up available in Slot 2
+			usePowerup2 = false;
 		}
 	}
 }
@@ -297,23 +295,23 @@ void AMyPlayerPawn::UsePowerup()
 	if (usePowerup1) {
 		if (hasSpeedLeft) {
 			ActivateSpeedPowerup();
-			RemoveLeftPowerup();
+			RemoveLeftPowerup(); // Clear left power-up after use
 		}
 		else if (hasSizeLeft) {
 			ActivateSizePowerup();
-			RemoveLeftPowerup();
+			RemoveLeftPowerup(); // Clear left power-up after use
 		}
 	}
-	
+
 	// Handle right power-up activation
 	if (usePowerup2) {
 		if (hasSpeedRight) {
 			ActivateSpeedPowerup();
-			RemoveRightPowerup();
+			RemoveRightPowerup(); // Clear right power-up after use
 		}
 		else if (hasSizeRight) {
 			ActivateSizePowerup();
-			RemoveRightPowerup();
+			RemoveRightPowerup(); // Clear right power-up after use
 		}
 	}
 }
@@ -324,32 +322,121 @@ void AMyPlayerPawn::ActivateSpeedPowerup()
 	MoveSpeed = 10.0f;
 	DelayTime = 5.0f;
 
+	//Multi_ActivateSpeedPowerup(SpeedMaterial);
+	Server_ActivateSpeedPowerup(SpeedMaterial);
+
 	// Set a timer to deactivate the speed boost after DelayTime seconds
 	GetWorld()->GetTimerManager().SetTimer(MyTimerHandler, this, &AMyPlayerPawn::DeactivateSpeedPowerup, DelayTime, false);
+}
+
+bool AMyPlayerPawn::Server_ActivateSpeedPowerup_Validate(UMaterial* material)
+{
+	return true;
+}
+
+void AMyPlayerPawn::Server_ActivateSpeedPowerup_Implementation(UMaterial* material)
+{
+	Multi_ActivateSpeedPowerup(material);
+}
+
+bool AMyPlayerPawn::Multi_ActivateSpeedPowerup_Validate(UMaterial* material)
+{
+	return true;
+}
+
+void AMyPlayerPawn::Multi_ActivateSpeedPowerup_Implementation(UMaterial* material)
+{
+	StaticMeshComponent->SetMaterial(0, material);
 }
 
 void AMyPlayerPawn::ActivateSizePowerup()
 {
 	// Temporarily increase player size
 	FVector Scale = FVector(0.7, 0.7, 0.3);
-	StaticMeshComponent->SetWorldScale3D(Scale);
 	DelayTime = 5.0f;
+
+	//Multi_ActivateSizePowerup(OriginalMaterial, Scale);
+	Server_ActivateSizePowerup(OriginalMaterial, Scale);
 
 	// Set a timer to deactivate the size boost after DelayTime seconds
 	GetWorld()->GetTimerManager().SetTimer(MyTimerHandler, this, &AMyPlayerPawn::DeactivateSizePowerup, DelayTime, false);
+}
+
+bool AMyPlayerPawn::Server_ActivateSizePowerup_Validate(UMaterial* material, FVector scale)
+{
+	return true;
+}
+
+void AMyPlayerPawn::Server_ActivateSizePowerup_Implementation(UMaterial* material, FVector scale)
+{
+	Multi_ActivateSizePowerup(material, scale);
+}
+
+bool AMyPlayerPawn::Multi_ActivateSizePowerup_Validate(UMaterial* material, FVector scale)
+{
+	return true;
+}
+
+void AMyPlayerPawn::Multi_ActivateSizePowerup_Implementation(UMaterial* material, FVector scale)
+{
+	StaticMeshComponent->SetWorldScale3D(scale);
 }
 
 void AMyPlayerPawn::DeactivateSpeedPowerup()
 {
 	// Reset player movement speed to default value
 	MoveSpeed = 3.0f;
+	Server_DeactivateSpeedPowerup(OriginalMaterial);
+	//Multi_DeactivateSpeedPowerup(OriginalMaterial);
+}
+
+bool AMyPlayerPawn::Server_DeactivateSpeedPowerup_Validate(UMaterial* material)
+{
+	return true;
+}
+
+void AMyPlayerPawn::Server_DeactivateSpeedPowerup_Implementation(UMaterial* material)
+{
+	Multi_DeactivateSpeedPowerup(material);
+}
+
+bool AMyPlayerPawn::Multi_DeactivateSpeedPowerup_Validate(UMaterial* material)
+{
+	return true;
+}
+
+void AMyPlayerPawn::Multi_DeactivateSpeedPowerup_Implementation(UMaterial* material)
+{
+	StaticMeshComponent->SetMaterial(0, material);
 }
 
 void AMyPlayerPawn::DeactivateSizePowerup()
 {
 	// Reset player size to default scale
-	FVector Scale = FVector(0.3, 0.3, 0.3);
-	StaticMeshComponent->SetWorldScale3D(Scale);
+	FVector Scale = FVector(0.5, 0.5, 0.3);
+	
+	Server_DeactivateSizePowerup(OriginalMaterial, Scale);
+	//Multi_DeactivateSizePowerup(OriginalMaterial, Scale);
+}
+
+bool AMyPlayerPawn::Server_DeactivateSizePowerup_Validate(UMaterial* material, FVector scale)
+{
+	return true;
+}
+
+void AMyPlayerPawn::Server_DeactivateSizePowerup_Implementation(UMaterial* material, FVector scale)
+{
+	Multi_DeactivateSizePowerup(material, scale);
+}
+
+bool AMyPlayerPawn::Multi_DeactivateSizePowerup_Validate(UMaterial* material, FVector scale)
+{
+	return true;
+}
+
+void AMyPlayerPawn::Multi_DeactivateSizePowerup_Implementation(UMaterial* material, FVector scale)
+{
+	StaticMeshComponent->SetWorldScale3D(scale);
 }
 
 void AMyPlayerPawn::RemoveLeftPowerup()
@@ -357,9 +444,13 @@ void AMyPlayerPawn::RemoveLeftPowerup()
 	// Clear all state related to the left power-up slot
 	hasPowerup1 = false;
 	usePowerup1 = false;
-	hasMaxPowerup = false;
 	hasSpeedLeft = false;
 	hasSizeLeft = false;
+	// If both slots are empty, reset the max power-up flag
+	if (!hasPowerup1 && !hasPowerup2)
+	{
+		hasMaxPowerup = false;
+	}
 }
 
 void AMyPlayerPawn::RemoveRightPowerup()
@@ -367,9 +458,13 @@ void AMyPlayerPawn::RemoveRightPowerup()
 	// Clear all state related to the right power-up slot
 	hasPowerup2 = false;
 	usePowerup2 = false;
-	hasMaxPowerup = false;
 	hasSpeedRight = false;
 	hasSizeRight = false;
+	// If both slots are empty, reset the max power-up flag
+	if (!hasPowerup1 && !hasPowerup2)
+	{
+		hasMaxPowerup = false;
+	}
 }
 
 void AMyPlayerPawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -379,4 +474,22 @@ void AMyPlayerPawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 	// Replicate the movement direction
 	DOREPLIFETIME(AMyPlayerPawn, CurrentDirection);
 	DOREPLIFETIME(AMyPlayerPawn, MoveSpeed);
+
+	// Replicate for the powerups
+	DOREPLIFETIME(AMyPlayerPawn, hasPowerup1);
+	DOREPLIFETIME(AMyPlayerPawn, hasPowerup2);
+	DOREPLIFETIME(AMyPlayerPawn, hasMaxPowerup);
+	DOREPLIFETIME(AMyPlayerPawn, usePowerup1);
+	DOREPLIFETIME(AMyPlayerPawn, usePowerup2);
+	DOREPLIFETIME(AMyPlayerPawn, hasSpeedLeft);
+	DOREPLIFETIME(AMyPlayerPawn, hasSpeedRight);
+	DOREPLIFETIME(AMyPlayerPawn, hasSizeLeft);
+	DOREPLIFETIME(AMyPlayerPawn, hasSizeRight);
+
+	// Scores
+	DOREPLIFETIME(AMyPlayerPawn, PlayerScore);
+
+	// Materials 
+	DOREPLIFETIME(AMyPlayerPawn, OriginalMaterial);
+	DOREPLIFETIME(AMyPlayerPawn, SpeedMaterial);
 }
