@@ -108,6 +108,7 @@ void AMyPlayerPawn::MoveLeftInput(const FInputActionValue& Value)
 {
 	if (Value.Get<bool>())
 	{
+		RotateHood();
 		CurrentDirection = EDirection::Left;
 	}
 }
@@ -117,6 +118,7 @@ void AMyPlayerPawn::MoveRightInput(const FInputActionValue& Value)
 {
 	if (Value.Get<bool>())
 	{
+		RotateHood();
 		CurrentDirection = EDirection::Right;
 	}
 }
@@ -126,6 +128,7 @@ void AMyPlayerPawn::MoveUpInput(const FInputActionValue& Value)
 {
 	if (Value.Get<bool>())
 	{
+		RotateHood();
 		CurrentDirection = EDirection::Up;
 	}
 }
@@ -135,13 +138,14 @@ void AMyPlayerPawn::MoveDownInput(const FInputActionValue& Value)
 {
 	if (Value.Get<bool>())
 	{
+		RotateHood();
 		CurrentDirection = EDirection::Down;
 	}
 }
 
 void AMyPlayerPawn::MovePlayer()
 {
-	RotateHood();
+	//RotateHood();
 
 	if (HasAuthority())
 	{
