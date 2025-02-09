@@ -44,6 +44,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
 	UStaticMeshComponent* StaticMeshComponent;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Components")
+	UStaticMeshComponent* HoodComponent;
+
 	// Box Collider
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components")
 	UBoxComponent* BoxCollider;
@@ -105,6 +108,21 @@ protected:
 	void Server_MovePlayer(FVector NewLocation);
 	bool Server_MovePlayer_Validate(FVector NewLocation);
 	void Server_MovePlayer_Implementation(FVector NewLocation);
+	
+	void RotateHood();
+
+	UFUNCTION(Server, Reliable, WithValidation)
+	void Server_RotateHood(FRotator NewRotation);
+	bool Server_RotateHood_Validate(FRotator NewRotation);
+	void Server_RotateHood_Implementation(FRotator NewRotation);
+
+	UFUNCTION(NetMulticast, Reliable, WithValidation)
+	void Multi_RotateHood(FRotator NewRotation);
+	bool Multi_RotateHood_Validate(FRotator NewRotation);
+	void Multi_RotateHood_Implementation(FRotator NewRotation);
+
+	UFUNCTION()
+	void OnRep_HoodRotation();
 
 	UFUNCTION(BlueprintCallable, Category = "Points")
 	void AddPoints(int32 Ammount);
@@ -170,6 +188,9 @@ protected:
 
 	UPROPERTY(Replicated)
 	FVector MovementDirection;
+
+	UPROPERTY(ReplicatedUsing = OnRep_HoodRotation)
+	FRotator HoodRotation;
 
 	// Score
 	UPROPERTY(Replicated, EditAnywhere, BlueprintReadWrite, Category = "Movement")

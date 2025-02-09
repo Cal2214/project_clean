@@ -18,6 +18,10 @@ AMyPlayerPawn::AMyPlayerPawn()
 	StaticMeshComponent->SetMaterial(0, OriginalMaterial);
 	RootComponent = StaticMeshComponent;
 
+	HoodComponent = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("HoodComponent"));
+	HoodComponent->SetupAttachment(RootComponent);
+	HoodComponent->SetIsReplicated(true);
+
 	BoxCollider = CreateDefaultSubobject<UBoxComponent>(TEXT("BoxColliderComponent"));
 	BoxCollider->SetupAttachment(RootComponent);
 
@@ -27,7 +31,6 @@ AMyPlayerPawn::AMyPlayerPawn()
 
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	Camera->SetupAttachment(SpringArm, USpringArmComponent::SocketName);
-
 
 	MoveSpeed = 3.0f;
 	CurrentDirection = EDirection::Still;
@@ -90,7 +93,7 @@ void AMyPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
 void AMyPlayerPawn::SetupInputMappingContext()
 {
-	// Set Mapping Context
+	// Set Mapping Context 
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
@@ -138,6 +141,8 @@ void AMyPlayerPawn::MoveDownInput(const FInputActionValue& Value)
 
 void AMyPlayerPawn::MovePlayer()
 {
+	RotateHood();
+
 	if (HasAuthority())
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("Server is handling movement."));
@@ -147,35 +152,35 @@ void AMyPlayerPawn::MovePlayer()
 		//UE_LOG(LogTemp, Warning, TEXT("Client is calling server move."));
 	}
 
-		FVector NewLocation = GetActorLocation();
-		FVector Reverse = FVector::ZeroVector;
+	FVector NewLocation = GetActorLocation();
+	FVector Reverse = FVector::ZeroVector;
 
-		switch (CurrentDirection)
-		{
-		case EDirection::Right:
-			NewLocation.Y += MoveSpeed;
-			break;
-		case EDirection::Left:
-			Reverse = GetActorRightVector() * -1.0;
-			NewLocation.Y += Reverse.Y * MoveSpeed;
-			break;
-		case EDirection::Up:
-			NewLocation.X += MoveSpeed;
-			break;
-		case EDirection::Down:
-			Reverse = GetActorForwardVector() * -1.0;
-			NewLocation.X += Reverse.X * MoveSpeed;
-			break;
-		default:
-			break;
-		}
+	switch (CurrentDirection)
+	{
+	case EDirection::Right:
+		NewLocation.Y += MoveSpeed;
+		break;
+	case EDirection::Left:
+		Reverse = GetActorRightVector() * -1.0;
+		NewLocation.Y += Reverse.Y * MoveSpeed;
+		break;
+	case EDirection::Up:
+		NewLocation.X += MoveSpeed;
+		break;
+	case EDirection::Down:
+		Reverse = GetActorForwardVector() * -1.0;
+		NewLocation.X += Reverse.X * MoveSpeed;
+		break;
+	default:
+		break;
+	}
 
-		SetActorLocation(NewLocation, false, nullptr, ETeleportType::None);
+	SetActorLocation(NewLocation, false, nullptr, ETeleportType::None);
 
-		if (!HasAuthority())
-		{
-			Server_MovePlayer(NewLocation);
-		}
+	if (!HasAuthority())
+	{
+		Server_MovePlayer(NewLocation);
+	}
 }
 
 bool AMyPlayerPawn::Server_MovePlayer_Validate(FVector NewLocation)
@@ -186,6 +191,58 @@ bool AMyPlayerPawn::Server_MovePlayer_Validate(FVector NewLocation)
 void AMyPlayerPawn::Server_MovePlayer_Implementation(FVector NewLocation)
 {
 	SetActorLocation(NewLocation, false, nullptr, ETeleportType::None);
+}
+
+void AMyPlayerPawn::RotateHood()
+{
+	switch (CurrentDirection)
+	{
+	case EDirection::Right:
+		HoodRotation = FRotator(0, 0, 0);
+		break;
+	case EDirection::Left:
+		HoodRotation = FRotator(0, 180, 0);
+		break;
+	case EDirection::Up:
+		HoodRotation = FRotator(0, -90, 0);
+		break;
+	case EDirection::Down:
+		HoodRotation = FRotator(0, 90, 0);
+		break;
+	default:
+		break;
+	}
+
+	Server_RotateHood(HoodRotation);
+}
+
+bool AMyPlayerPawn::Server_RotateHood_Validate(FRotator NewRotation)
+{
+	return true; 
+}
+
+void AMyPlayerPawn::Server_RotateHood_Implementation(FRotator NewRotation)
+{
+	Multi_RotateHood(NewRotation);
+}
+
+bool AMyPlayerPawn::Multi_RotateHood_Validate(FRotator NewRotation)
+{
+	return true;
+}
+
+void AMyPlayerPawn::Multi_RotateHood_Implementation(FRotator NewRotation)
+{
+	HoodRotation = NewRotation;
+	OnRep_HoodRotation();
+}
+
+void AMyPlayerPawn::OnRep_HoodRotation()
+{
+	if (HoodComponent)
+	{
+		HoodComponent->SetRelativeRotation(HoodRotation);
+	}
 }
 
 void AMyPlayerPawn::AddPoints(int32 Ammount)
@@ -473,7 +530,8 @@ void AMyPlayerPawn::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 
 	// Replicate the movement direction
 	DOREPLIFETIME(AMyPlayerPawn, CurrentDirection);
-	DOREPLIFETIME(AMyPlayerPawn, MoveSpeed);
+	DOREPLIFETIME(AMyPlayerPawn, MoveSpeed); 
+	DOREPLIFETIME(AMyPlayerPawn, HoodRotation);
 
 	// Replicate for the powerups
 	DOREPLIFETIME(AMyPlayerPawn, hasPowerup1);
