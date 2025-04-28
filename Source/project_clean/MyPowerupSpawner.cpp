@@ -23,6 +23,14 @@ void AMyPowerupSpawner::BeginPlay()
 	
 	//DelayPowerup();
 	
+	//if (HasAuthority())
+	//{
+	//	DelayPowerup();
+	//}
+}
+
+void AMyPowerupSpawner::StartSpawn()
+{
 	if (HasAuthority())
 	{
 		DelayPowerup();

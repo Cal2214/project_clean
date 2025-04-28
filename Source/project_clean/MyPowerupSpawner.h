@@ -44,6 +44,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawner")
 	TSubclassOf<AMyPowerup> PowerupClass;
 
+	UFUNCTION(BlueprintCallable)
+	void StartSpawn();
+
 public:	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
