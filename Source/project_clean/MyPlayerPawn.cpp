@@ -82,12 +82,12 @@ void AMyPlayerPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		// Movement 
-		EnhancedInputComponent->BindAction(RightMove, ETriggerEvent::Triggered, this, &AMyPlayerPawn::MoveRightInput);
-		EnhancedInputComponent->BindAction(LeftMove, ETriggerEvent::Triggered, this, &AMyPlayerPawn::MoveLeftInput);
-		EnhancedInputComponent->BindAction(UpMove, ETriggerEvent::Triggered, this, &AMyPlayerPawn::MoveUpInput);
-		EnhancedInputComponent->BindAction(DownMove, ETriggerEvent::Triggered, this, &AMyPlayerPawn::MoveDownInput);
-		EnhancedInputComponent->BindAction(LeftPowerup, ETriggerEvent::Triggered, this, &AMyPlayerPawn::ActivateLeftPowerup);
-		EnhancedInputComponent->BindAction(RightPowerup, ETriggerEvent::Triggered, this, &AMyPlayerPawn::ActivateRightPowerup);
+		EnhancedInputComponent->BindAction(RightMove, ETriggerEvent::Started, this, &AMyPlayerPawn::MoveRightInput);
+		EnhancedInputComponent->BindAction(LeftMove, ETriggerEvent::Started, this, &AMyPlayerPawn::MoveLeftInput);
+		EnhancedInputComponent->BindAction(UpMove, ETriggerEvent::Started, this, &AMyPlayerPawn::MoveUpInput);
+		EnhancedInputComponent->BindAction(DownMove, ETriggerEvent::Started, this, &AMyPlayerPawn::MoveDownInput);
+		EnhancedInputComponent->BindAction(LeftPowerup, ETriggerEvent::Started, this, &AMyPlayerPawn::ActivateLeftPowerup);
+		EnhancedInputComponent->BindAction(RightPowerup, ETriggerEvent::Started, this, &AMyPlayerPawn::ActivateRightPowerup);
 	}
 }
 
@@ -108,8 +108,8 @@ void AMyPlayerPawn::MoveLeftInput(const FInputActionValue& Value)
 {
 	if (Value.Get<bool>())
 	{
-		RotateHood();
 		CurrentDirection = EDirection::Left;
+		RotateHood();
 	}
 }
 
@@ -118,8 +118,8 @@ void AMyPlayerPawn::MoveRightInput(const FInputActionValue& Value)
 {
 	if (Value.Get<bool>())
 	{
-		RotateHood();
 		CurrentDirection = EDirection::Right;
+		RotateHood();
 	}
 }
 
@@ -128,8 +128,8 @@ void AMyPlayerPawn::MoveUpInput(const FInputActionValue& Value)
 {
 	if (Value.Get<bool>())
 	{
-		RotateHood();
 		CurrentDirection = EDirection::Up;
+		RotateHood();
 	}
 }
 
@@ -138,8 +138,8 @@ void AMyPlayerPawn::MoveDownInput(const FInputActionValue& Value)
 {
 	if (Value.Get<bool>())
 	{
-		RotateHood();
 		CurrentDirection = EDirection::Down;
+		RotateHood();
 	}
 }
 

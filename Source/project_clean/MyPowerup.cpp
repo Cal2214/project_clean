@@ -22,7 +22,7 @@ void AMyPowerup::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	GetPowerup();
+	//GetPowerup();
 }
 
 // Called every frame
